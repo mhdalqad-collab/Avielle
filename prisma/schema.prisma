@@ -1,0 +1,227 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "sqlite"
+  url = env("DATABASE_URL")
+}
+model User {
+  id String @id
+  name String
+  role String
+  avatar String
+  active Boolean @default(true)
+  verified Boolean @default(false)
+  identityVerified Boolean @default(false)
+  rating Float @default(4.8)
+  bio String @default("")
+  username String @default("")
+  followers Int @default(0)
+  items Item[]
+  bookings Booking[]
+}
+model Item {
+  id String @id @default(cuid())
+  ownerId String
+  owner User @relation(fields:[ownerId], references:[id])
+  title String
+  description String
+  brand String
+  category String
+  tier String
+  size String
+  gender String @default("Unisex")
+  color String
+  condition String @default("Excellent")
+  replacementValue Int
+  rentalPricePerDay Int
+  securityDeposit Int
+  location String @default("Berlin")
+  deliveryOptions String @default("OWNER_SHIPPING,PLATFORM_COURIER,LOCAL_PICKUP")
+  approvalRequired Boolean @default(false)
+  authenticationStatus String @default("NOT_REQUIRED")
+  availableFrom String @default("2026-10-01")
+  availableTo String @default("2027-12-31")
+  status String @default("ACTIVE")
+  images String
+  designer String @default("")
+  collection String @default("")
+  year Int @default(2025)
+  serialNumber String @default("")
+  proofOfPurchase String @default("")
+  certificate String @default("")
+  insuranceRequired Boolean @default(false)
+  minimumRenterRating Float @default(0)
+  identityVerificationRequired Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  bookings Booking[]
+  @@index([tier,status])
+}
+model Booking {
+  id String @id @default(cuid())
+  itemId String
+  item Item @relation(fields:[itemId], references:[id])
+  renterId String
+  renter User @relation(fields:[renterId], references:[id])
+  startDate String
+  endDate String
+  days Int
+  status String @default("BOOKING_REQUESTED")
+  rental Int
+  serviceFee Int
+  deliveryFee Int
+  insuranceFee Int @default(0)
+  depositAmount Int
+  total Int
+  lateFee Int @default(0)
+  overdue Boolean @default(false)
+  scenarioId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  payment Payment?
+  deposit SecurityDeposit?
+  payout OwnerPayout?
+  delivery Delivery?
+  reports ConditionReport[]
+  claim DamageClaim?
+  messages Message[]
+  reviews Review[]
+  history BookingStatusHistory[]
+  @@index([itemId,startDate,endDate])
+  @@index([scenarioId])
+}
+model Payment {
+  id String @id @default(cuid())
+  bookingId String @unique
+  booking Booking @relation(fields:[bookingId], references:[id],onDelete:Cascade)
+  status String @default("PENDING")
+  amount Int
+  refunded Int @default(0)
+}
+model SecurityDeposit {
+  id String @id @default(cuid())
+  bookingId String @unique
+  booking Booking @relation(fields:[bookingId], references:[id],onDelete:Cascade)
+  status String @default("PENDING")
+  amount Int
+  captured Int @default(0)
+  released Int @default(0)
+}
+model OwnerPayout {
+  id String @id @default(cuid())
+  bookingId String @unique
+  booking Booking @relation(fields:[bookingId], references:[id],onDelete:Cascade)
+  amount Int
+  status String @default("PAID")
+}
+model Delivery {
+  id String @id @default(cuid())
+  bookingId String @unique
+  booking Booking @relation(fields:[bookingId], references:[id],onDelete:Cascade)
+  method String
+  status String @default("NOT_STARTED")
+  tracking String
+  delayedUntil String?
+  events DeliveryEvent[]
+}
+model DeliveryEvent {
+  id String @id @default(cuid())
+  deliveryId String
+  delivery Delivery @relation(fields:[deliveryId], references:[id],onDelete:Cascade)
+  status String
+  simulatedAt String
+}
+model ConditionReport {
+  id String @id @default(cuid())
+  bookingId String
+  booking Booking @relation(fields:[bookingId], references:[id],onDelete:Cascade)
+  phase String
+  condition String
+  photos String @default("[]")
+  notes String
+  createdBy String
+  createdAt DateTime @default(now())
+  simulatedAt String
+  @@unique([bookingId,phase])
+}
+model DamageClaim {
+  id String @id @default(cuid())
+  bookingId String @unique
+  booking Booking @relation(fields:[bookingId], references:[id],onDelete:Cascade)
+  description String
+  amount Int
+  status String @default("OPEN")
+  decision String?
+  deduction Int @default(0)
+  dispute Dispute?
+}
+model Dispute {
+  id String @id @default(cuid())
+  claimId String @unique
+  claim DamageClaim @relation(fields:[claimId],references:[id],onDelete:Cascade)
+  reason String
+  status String @default("OPEN")
+  resolution String?
+}
+model Message {
+  id String @id @default(cuid())
+  bookingId String
+  booking Booking @relation(fields:[bookingId], references:[id],onDelete:Cascade)
+  senderId String
+  text String
+  createdAt DateTime @default(now())
+}
+model Review {
+  id String @id @default(cuid())
+  bookingId String
+  booking Booking @relation(fields:[bookingId], references:[id],onDelete:Cascade)
+  authorId String
+  targetId String
+  rating Int
+  comment String
+  createdAt DateTime @default(now())
+  @@unique([bookingId,authorId])
+}
+model BookingStatusHistory {
+  id String @id @default(cuid())
+  bookingId String
+  booking Booking @relation(fields:[bookingId], references:[id],onDelete:Cascade)
+  oldState String
+  newState String
+  actor String
+  simulatedAt String
+}
+model Notification {
+  id String @id @default(cuid())
+  userId String
+  bookingId String?
+  type String
+  text String
+  read Boolean @default(false)
+  simulatedAt String
+  @@index([userId,read])
+}
+model PlatformEvent {
+  id String @id @default(cuid())
+  type String
+  entityType String
+  entityId String
+  actor String
+  oldState String @default("")
+  newState String @default("")
+  metadata String @default("{}")
+  createdAt DateTime @default(now())
+  simulatedAt String
+  @@index([entityId])
+}
+model SimulatorSession {
+  id String @id
+  name String
+  bookingId String?
+  initialState String @default("BOOKING_REQUESTED")
+}
+model PlatformClock {
+  id String @id @default("clock")
+  now String
+}
