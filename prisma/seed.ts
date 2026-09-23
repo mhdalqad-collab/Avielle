@@ -21,6 +21,10 @@ const seedDb = new PrismaClient({
   },
 });
 async function main() {
+  if (!process.env.DIRECT_URL && process.env.DATABASE_URL?.includes("-pooler."))
+    throw new Error(
+      "Seeding requires DIRECT_URL. Add Neon's direct (non-pooler) connection string to .env.",
+    );
   if (await seedDb.user.count()) {
     console.log("Seed data already exists. Database preserved.");
     return;
