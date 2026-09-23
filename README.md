@@ -12,10 +12,10 @@ Requires **Node.js 22.13+** (Node 24 recommended) and npm. No external services 
 npm install
 ```
 
-Copy `.env.example` to `.env` if it does not already exist:
+Copy `.env.example` to `.env` if it does not already exist, then set it to your Neon connection string:
 
 ```text
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="postgresql://user:password@host/database?sslmode=require"
 ```
 
 Then:
@@ -25,7 +25,7 @@ npm run db:setup
 npm run dev
 ```
 
-Open **http://localhost:3000**. `db:setup` creates the SQLite file if needed, applies checked-in migrations, generates Prisma Client, and seeds the database. The file initializer handles a Prisma schema-engine issue on Windows when the SQLite file does not yet exist. The Node SQLite experimental notice on Node 22/24 is informational.
+Open **http://localhost:3000**. `db:setup` applies the PostgreSQL migration and seeds the database. For Vercel, add the same `DATABASE_URL` in the Production, Preview, and Development environment variables, then redeploy.
 
 Production preview:
 
@@ -123,7 +123,7 @@ Application services + guarded state machine + pricing
           ↓
 Prisma transaction / repositories
           ↓
-SQLite
+PostgreSQL (Neon)
 ```
 
 | Area | Files |
@@ -144,7 +144,7 @@ The server owns all authoritative business state. The only browser-storage value
 
 Prisma entities include User, Item, Booking, Payment, SecurityDeposit, OwnerPayout, Delivery, DeliveryEvent, ConditionReport, DamageClaim, Dispute, Message, Review, BookingStatusHistory, Notification, PlatformEvent, SimulatorSession, and PlatformClock. Small prototype concepts such as influencer profiles, verification, authentication, item availability, and conversation participants are represented by fields/relations on these entities rather than extra one-to-one tables. Images and evidence paths use validated JSON arrays.
 
-Stack: Next.js 15, React 19, strict TypeScript, Prisma 6, SQLite, Zod, Lucide, and a responsive custom CSS design system. No microservices, message broker, real payments, identity documents, courier APIs, banking, or external insurance.
+Stack: Next.js 15, React 19, strict TypeScript, Prisma 6, PostgreSQL (Neon), Zod, Lucide, and a responsive custom CSS design system. No microservices, message broker, real payments, identity documents, courier APIs, banking, or external insurance.
 
 ## Routes
 
@@ -170,7 +170,7 @@ API: `GET /api/state` provides the prototype read model. `POST /api/action` acce
 
 ## Validation
 
-`npm test` uses real Prisma transactions against a disposable SQLite database created from the checked-in migrations. It does **not** modify the demo database. Coverage includes date boundaries and concurrent conflicts, normal/luxury success, eligibility, invalid transitions and rollback, role enforcement, payment failure/retry, deposits, partial/full damage settlement, late fees, cancellation refunds, payouts, listing policies, pickup, delivery delay, admin suspension, and scenario isolation.
+`npm test` uses real Prisma transactions against a disposable test database. It does **not** modify the demo database. Coverage includes date boundaries and concurrent conflicts, normal/luxury success, eligibility, invalid transitions and rollback, role enforcement, payment failure/retry, deposits, partial/full damage settlement, late fees, cancellation refunds, payouts, listing policies, pickup, delivery delay, admin suspension, and scenario isolation.
 
 Use `npm run typecheck` and `npm run build` to validate the application. Browser QA covers responsive storefront and simulator layouts, luxury approval/payment/fulfillment/return, and persisted completion outcomes.
 

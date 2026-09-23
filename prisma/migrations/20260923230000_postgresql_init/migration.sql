@@ -1,21 +1,23 @@
--- CreateTable
+﻿-- CreateTable
 CREATE TABLE "User" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "role" TEXT NOT NULL,
     "avatar" TEXT NOT NULL,
     "active" BOOLEAN NOT NULL DEFAULT true,
     "verified" BOOLEAN NOT NULL DEFAULT false,
     "identityVerified" BOOLEAN NOT NULL DEFAULT false,
-    "rating" REAL NOT NULL DEFAULT 4.8,
+    "rating" DOUBLE PRECISION NOT NULL DEFAULT 4.8,
     "bio" TEXT NOT NULL DEFAULT '',
     "username" TEXT NOT NULL DEFAULT '',
-    "followers" INTEGER NOT NULL DEFAULT 0
+    "followers" INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Item" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "ownerId" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
@@ -44,16 +46,17 @@ CREATE TABLE "Item" (
     "proofOfPurchase" TEXT NOT NULL DEFAULT '',
     "certificate" TEXT NOT NULL DEFAULT '',
     "insuranceRequired" BOOLEAN NOT NULL DEFAULT false,
-    "minimumRenterRating" REAL NOT NULL DEFAULT 0,
+    "minimumRenterRating" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "identityVerificationRequired" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "Item_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Item_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Booking" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "itemId" TEXT NOT NULL,
     "renterId" TEXT NOT NULL,
     "startDate" TEXT NOT NULL,
@@ -69,144 +72,158 @@ CREATE TABLE "Booking" (
     "lateFee" INTEGER NOT NULL DEFAULT 0,
     "overdue" BOOLEAN NOT NULL DEFAULT false,
     "scenarioId" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "Booking_itemId_fkey" FOREIGN KEY ("itemId") REFERENCES "Item" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT "Booking_renterId_fkey" FOREIGN KEY ("renterId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Booking_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Payment" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "bookingId" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'PENDING',
     "amount" INTEGER NOT NULL,
     "refunded" INTEGER NOT NULL DEFAULT 0,
-    CONSTRAINT "Payment_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+
+    CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "SecurityDeposit" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "bookingId" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'PENDING',
     "amount" INTEGER NOT NULL,
     "captured" INTEGER NOT NULL DEFAULT 0,
     "released" INTEGER NOT NULL DEFAULT 0,
-    CONSTRAINT "SecurityDeposit_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+
+    CONSTRAINT "SecurityDeposit_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "OwnerPayout" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "bookingId" TEXT NOT NULL,
     "amount" INTEGER NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'PAID',
-    CONSTRAINT "OwnerPayout_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+
+    CONSTRAINT "OwnerPayout_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Delivery" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "bookingId" TEXT NOT NULL,
     "method" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'NOT_STARTED',
     "tracking" TEXT NOT NULL,
-    CONSTRAINT "Delivery_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "delayedUntil" TEXT,
+
+    CONSTRAINT "Delivery_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "DeliveryEvent" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "deliveryId" TEXT NOT NULL,
     "status" TEXT NOT NULL,
     "simulatedAt" TEXT NOT NULL,
-    CONSTRAINT "DeliveryEvent_deliveryId_fkey" FOREIGN KEY ("deliveryId") REFERENCES "Delivery" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+
+    CONSTRAINT "DeliveryEvent_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "ConditionReport" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "bookingId" TEXT NOT NULL,
     "phase" TEXT NOT NULL,
     "condition" TEXT NOT NULL,
     "photos" TEXT NOT NULL DEFAULT '[]',
     "notes" TEXT NOT NULL,
     "createdBy" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "simulatedAt" TEXT NOT NULL,
-    CONSTRAINT "ConditionReport_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+
+    CONSTRAINT "ConditionReport_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "DamageClaim" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "bookingId" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "amount" INTEGER NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'OPEN',
     "decision" TEXT,
     "deduction" INTEGER NOT NULL DEFAULT 0,
-    CONSTRAINT "DamageClaim_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+
+    CONSTRAINT "DamageClaim_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Dispute" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "claimId" TEXT NOT NULL,
     "reason" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'OPEN',
     "resolution" TEXT,
-    CONSTRAINT "Dispute_claimId_fkey" FOREIGN KEY ("claimId") REFERENCES "DamageClaim" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+
+    CONSTRAINT "Dispute_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Message" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "bookingId" TEXT NOT NULL,
     "senderId" TEXT NOT NULL,
     "text" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "Message_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Message_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Review" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "bookingId" TEXT NOT NULL,
     "authorId" TEXT NOT NULL,
     "targetId" TEXT NOT NULL,
     "rating" INTEGER NOT NULL,
     "comment" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "Review_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Review_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "BookingStatusHistory" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "bookingId" TEXT NOT NULL,
     "oldState" TEXT NOT NULL,
     "newState" TEXT NOT NULL,
     "actor" TEXT NOT NULL,
     "simulatedAt" TEXT NOT NULL,
-    CONSTRAINT "BookingStatusHistory_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+
+    CONSTRAINT "BookingStatusHistory_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Notification" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "bookingId" TEXT,
     "type" TEXT NOT NULL,
     "text" TEXT NOT NULL,
     "read" BOOLEAN NOT NULL DEFAULT false,
-    "simulatedAt" TEXT NOT NULL
+    "simulatedAt" TEXT NOT NULL,
+
+    CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "PlatformEvent" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "entityType" TEXT NOT NULL,
     "entityId" TEXT NOT NULL,
@@ -214,22 +231,28 @@ CREATE TABLE "PlatformEvent" (
     "oldState" TEXT NOT NULL DEFAULT '',
     "newState" TEXT NOT NULL DEFAULT '',
     "metadata" TEXT NOT NULL DEFAULT '{}',
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "simulatedAt" TEXT NOT NULL
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "simulatedAt" TEXT NOT NULL,
+
+    CONSTRAINT "PlatformEvent_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "SimulatorSession" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "bookingId" TEXT,
-    "initialState" TEXT NOT NULL DEFAULT 'BOOKING_REQUESTED'
+    "initialState" TEXT NOT NULL DEFAULT 'BOOKING_REQUESTED',
+
+    CONSTRAINT "SimulatorSession_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "PlatformClock" (
-    "id" TEXT NOT NULL PRIMARY KEY DEFAULT 'clock',
-    "now" TEXT NOT NULL
+    "id" TEXT NOT NULL DEFAULT 'clock',
+    "now" TEXT NOT NULL,
+
+    CONSTRAINT "PlatformClock_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -270,3 +293,46 @@ CREATE INDEX "Notification_userId_read_idx" ON "Notification"("userId", "read");
 
 -- CreateIndex
 CREATE INDEX "PlatformEvent_entityId_idx" ON "PlatformEvent"("entityId");
+
+-- AddForeignKey
+ALTER TABLE "Item" ADD CONSTRAINT "Item_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Booking" ADD CONSTRAINT "Booking_itemId_fkey" FOREIGN KEY ("itemId") REFERENCES "Item"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Booking" ADD CONSTRAINT "Booking_renterId_fkey" FOREIGN KEY ("renterId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Payment" ADD CONSTRAINT "Payment_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SecurityDeposit" ADD CONSTRAINT "SecurityDeposit_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OwnerPayout" ADD CONSTRAINT "OwnerPayout_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Delivery" ADD CONSTRAINT "Delivery_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "DeliveryEvent" ADD CONSTRAINT "DeliveryEvent_deliveryId_fkey" FOREIGN KEY ("deliveryId") REFERENCES "Delivery"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ConditionReport" ADD CONSTRAINT "ConditionReport_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "DamageClaim" ADD CONSTRAINT "DamageClaim_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Dispute" ADD CONSTRAINT "Dispute_claimId_fkey" FOREIGN KEY ("claimId") REFERENCES "DamageClaim"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Message" ADD CONSTRAINT "Message_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Review" ADD CONSTRAINT "Review_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BookingStatusHistory" ADD CONSTRAINT "BookingStatusHistory_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
