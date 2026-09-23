@@ -16,6 +16,7 @@ Copy `.env.example` to `.env` if it does not already exist, then set it to your 
 
 ```text
 DATABASE_URL="postgresql://user:password@host/database?sslmode=require"
+DIRECT_URL="postgresql://user:password@host/database?sslmode=require"
 ```
 
 Then:
@@ -25,7 +26,7 @@ npm run db:setup
 npm run dev
 ```
 
-Open **http://localhost:3000**. `db:setup` applies the PostgreSQL migration and seeds the database. For Vercel, add the same `DATABASE_URL` in the Production, Preview, and Development environment variables, then redeploy.
+Open **http://localhost:3000**. `db:setup` applies the PostgreSQL migration and seeds the database. Use Neon’s pooled connection for `DATABASE_URL` and its unpooled/direct connection for `DIRECT_URL`. In Vercel, add both variables to the Production environment, then redeploy; the build applies the migration and seeds an empty database automatically.
 
 Production preview:
 

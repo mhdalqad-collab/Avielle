@@ -1,4 +1,4 @@
-import { db } from "../lib/db";
+import { PrismaClient } from "@prisma/client";
 import {
   runTransaction,
   requestBooking,
@@ -15,8 +15,13 @@ const images = {
   evening: "/images/evening.jpg",
   hero: "/images/hero.jpg",
 };
+const seedDb = new PrismaClient({
+  datasources: {
+    db: { url: process.env.DIRECT_URL || process.env.DATABASE_URL },
+  },
+});
 async function main() {
-  if (await db.user.count()) {
+  if (await seedDb.user.count()) {
     console.log("Seed data already exists. Database preserved.");
     return;
   }
@@ -247,9 +252,9 @@ async function main() {
         text: "Hi Sara! I’ll include the dust bag and a care guide. Let me know if you have any questions.",
       },
     });
-  }, db);
+  }, seedDb);
   console.log(
     "Seeded 12 accounts, 32 catalog pieces, 2 approvals, 7 simulator scenarios, and a completed rental.",
   );
 }
-main().finally(() => db.$disconnect());
+main().finally(() => seedDb.$disconnect());

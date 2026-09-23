@@ -884,5 +884,5 @@ export async function runTransaction<T>(
   fn: (tx: Tx) => Promise<T>,
   client: PrismaClient = db,
 ) {
-  return client.$transaction(fn, { maxWait: 10000, timeout: 20000 });
+  return client.$transaction(fn, { maxWait: 30000, timeout: 120000 });
 }
