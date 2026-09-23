@@ -4,7 +4,7 @@ export const metadata: Metadata = {
   title: "Avielle — A wardrobe without limits",
   description:
     "Rent extraordinary fashion for everyday moments. An interactive marketplace and rental lifecycle simulator.",
-  icons: { icon: "/favicon.svg" },
+  icons: { icon: "/favicon-a.svg" },
 };
 export default function RootLayout({
   children,
